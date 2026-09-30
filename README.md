@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Halden — landscape design + build (demo)
 
-## Getting Started
-
-First, run the development server:
+A one-page concept site for a fictional Eastside landscape firm. The hero turns a single
+photograph into a graphite perspective drawing, then builds the yard back in crew order
+(stone, planting, finish) and relights it at blue hour as you scroll.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+npm run build      # static export to out/
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`BASE_PATH=/halden npm run build` if the export is hosted under a sub-path.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Everything a client changes lives in `lib/site.ts`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `name`, `town`, `phone`, `email`, `contractorReg`, `serviceTowns`, price bands, projects, reviews.
+- `showConceptBanner` shows the "Unofficial concept" bar and tags every figure as **sample**.
+- `fictional` (true for the invented demo firm, false automatically when `NEXT_PUBLIC_SITE_NAME` is set):
+  the footer then says "Unofficial concept for {name}, not affiliated" instead of "fictional business".
+- `hero`: one daylight, eye-level, landscape photo (Pexels id), plus:
+  - `focal` (desktop / mobile), `vanishingPoint`, mask `thresholds`
+  - `overrides` (polygons forcing stone / planting / distance; `base: false` for set pieces like benches
+    that arrive whole; `planter` for planting in a vessel, which comes up with the stone around it),
+    `retouch` (clone / desaturate patches)
+  - `strokes` + `quiet` (designer's lines drawn over, and areas where generated lines are suppressed)
+  - `callouts` (anchor on the feature, label offset, stage that ticks it BUILT), `lights` / `lightsMobile`
+  - optional `duskPhoto`, a same-angle night photo used instead of the synthetic relight.
 
-## Learn More
+All states come from that one photo (`lib/hero/process.ts` builds the drawing, masks and reveal
+map once; `lib/hero/gl.ts` is the single WebGL2 shader). Without WebGL the same drawing and reveal map
+are composited in Canvas 2D; only an unreadable (CORS-tainted) photo falls back to an SVG-filter sketch.
+The closing section shows the hero's own last frame (finished, blue hour, every light on).
 
-To learn more about Next.js, take a look at the following resources:
+## Dev switches
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| URL | What it does |
+| --- | --- |
+| `?masks` (dev builds only) | Shader shows the masks: red stone, green planting, blue distance, white bands = reveal order |
+| `?trace` (dev builds only) | Click on the hero to place points, copy them as JSON for polygons, strokes and anchors |
+| `?nogl` | Forces the no-WebGL fallback |
+| `?month=3` / `?month=mar` | Pretends it is that month (season copy, CTAs, year ribbon, sunset line) |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`NEXT_PUBLIC_SITE_NAME="A Much Longer Firm Name" npm run build` tests long names.
 
-## Deploy on Vercel
+## Photos
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Hotlinked from Pexels (credited in the footer): hero 37785078 (Brett A), projects 7045706
+(Max Vakhtbovych), 32707056 (xfly), 38193972 (Magda Ehlers). The dusk image is rendered from the hero.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Halden is fictional. Every figure, review, licence and credential on the page is sample content.
